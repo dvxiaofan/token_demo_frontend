@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {AxiosRequestConfig} from 'axios';
 
 const axiosInstance = axios.create({
     baseURL: 'http://localhost:3000',
@@ -13,15 +13,35 @@ axiosInstance.interceptors.request.use((config) => {
     return config;
 });
 
+interface PendingTask {
+    config: AxiosRequestConfig;
+    resolve: Function;
+}
+
+let refreshing = false;
+const queue: PendingTask[] = [];
+
 axiosInstance.interceptors.response.use((response) => {
     return response;
 }, async (error) => {
     let {data, config} = error.response;
 
+    if (refreshing) {
+        return new Promise((resolve) => {
+            queue.push({config, resolve});
+        });
+    }
+
     if (data.statusCode === 401 && !config.url.includes('/refresh')) {
+        refreshing = true;
+
         const res = await refreshToken();
 
         if (res?.status === 200) {
+            queue.forEach((item) => {
+                item.resolve(axiosInstance(item.config));
+            });
+
             return axiosInstance(config);
         } else {
             alert(data || '登录过期，请重新登录')
