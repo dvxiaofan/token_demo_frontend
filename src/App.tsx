@@ -1,26 +1,30 @@
-import React from 'react';
+import React, {useCallback, useState} from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+interface User {
+    username: string;
+    email?: string;
+}
+
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [user, setUser] = useState<User>();
+
+    const login = useCallback(() => {
+        setUser({
+            username: 'guang',
+            email: 'xxx@333.com'
+        })
+    }, []);
+
+    return (
+        <div className="App">
+            {
+                user?.username ? <h2>Current User: {user.username}</h2> :
+                    <button onClick={login}>login</button>
+            }
+        </div>
+    );
 }
 
 export default App;
